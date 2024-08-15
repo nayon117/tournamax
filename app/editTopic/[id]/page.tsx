@@ -1,25 +1,54 @@
-import TopicForm from '@/components/TopicForm';
-import { getTopic, updateTopic } from '@/lib/actions/topic.action';
-import { Topic } from '@/types';
-import { redirect } from 'next/navigation';
+"use client";
 
-export default async function EditTopic({ params }: { params: { id: string } }) {
-  const topic = await getTopic(params.id);
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import TopicForm from "@/components/TopicForm";
+import { Topic } from "@/types";
+import Loader from "@/components/Loader";
 
-  if (!topic) {
-    return <div>Topic not found</div>;
-  }
+export default function EditTopic({ params }: { params: { id: string } }) {
+  const [topic, setTopic] = useState<Topic | null>(null);
+  const router = useRouter();
 
-  async function editTopic(updatedTopic: Omit<Topic, '_id'>) {
-    'use server';
-    await updateTopic(params.id, updatedTopic);
-    redirect('/');
-  }
+  useEffect(() => {
+    fetchTopic();
+  }, []);
+
+  // fetchTopic function to get the topic data
+  const fetchTopic = async () => {
+    const response = await fetch(`/api/topics/${params.id}`);
+    const data = await response.json();
+    setTopic(data);
+  };
+
+  // handleSubmit function to update the topic
+  const handleSubmit = async (topicData: {
+    title: string;
+    description: string;
+  }) => {
+    const response = await fetch(`/api/topics/${params.id}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(topicData),
+    });
+
+    if (response.ok) {
+      router.push("/");
+    } else {
+      console.error("Failed to update topic");
+    }
+  };
+
+  if (!topic) return <Loader />;
 
   return (
     <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">Edit Topic</h1>
-      <TopicForm initialTopic={topic} onSubmit={editTopic} />
+      <div className="max-w-3xl mx-auto">
+        <h1 className="text-2xl font-bold mb-4">Edit Topic</h1>
+        <TopicForm initialTopic={topic} onSubmit={handleSubmit} />
+      </div>
     </div>
   );
 }

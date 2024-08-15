@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { Topic } from '@/types';
+import toast from 'react-hot-toast';
 
 // Define the props for the TopicForm 
 interface TopicFormProps {
@@ -17,6 +18,11 @@ const TopicForm: React.FC<TopicFormProps> = ({ initialTopic, onSubmit }) => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSubmit({ title, description });
+    if (initialTopic) {
+      toast.success('Topic updated successfully!');
+    } else {
+      toast.success('Topic added successfully!');
+    }
   };
 
   return (
